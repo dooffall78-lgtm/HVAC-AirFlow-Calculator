@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Расход">
+<title>Расход воздуха</title>
+<style>
+:root{color-scheme:dark;--muted:#9aa4b2;--text:#f5f7fb;--line:#26304a;--accent:#5aa9ff;--good:#43d17a;--warn:#ffcc66;--bad:#ff6b6b;--input:#0f1527;--bg1:#0a0f1d;--bg2:#101728;--tab:#11172a;--card:rgba(21,27,46,.95);--res:#0d1424;--chip:#10172a;--rec:#0f1527;--sec:#222c46;--onacc:#06111f;--delbg:#2b1720;--delc:#ff9b9b;--delb:#5a2737;--hair:rgba(255,255,255,.06)}
+[data-theme=light]{color-scheme:light;--muted:#566074;--text:#141a2a;--line:#c5cddd;--accent:#1a6fd8;--good:#12803c;--warn:#9a5b00;--bad:#c62828;--input:#fff;--bg1:#eef2f8;--bg2:#e2e8f2;--tab:#fff;--card:#fff;--res:#f2f5fa;--chip:#f2f5fa;--rec:#f7f9fc;--sec:#e1e7f1;--onacc:#fff;--delbg:#fdecec;--delc:#b42318;--delb:#f1b3ae;--hair:rgba(0,0,0,.08)}
+[data-theme=hc]{color-scheme:dark;--muted:#d0d0d0;--text:#fff;--line:#9a9a9a;--accent:#ffe600;--good:#58ff8f;--warn:#ffd24d;--bad:#ff8080;--input:#000;--bg1:#000;--bg2:#000;--tab:#000;--card:#000;--res:#000;--chip:#000;--rec:#000;--sec:#2a2a2a;--onacc:#000;--delbg:#000;--delc:#ff8080;--delb:#ff8080;--hair:rgba(255,255,255,.25)}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2)) fixed;color:var(--text);min-height:100dvh}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 40px;padding-top:max(16px,env(safe-area-inset-top))}
+h1{font-size:26px;margin:6px 0 4px}
+.sub{color:var(--muted);margin-bottom:14px;font-size:14px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.tab{border:1px solid var(--line);background:var(--tab);color:var(--text);padding:12px 8px;border-radius:12px;font-weight:700;font-size:14px}
+.tab.active{background:var(--accent);color:var(--onacc);border-color:transparent}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.hidden{display:none}
+label{display:block;font-size:14px;color:var(--muted);margin:12px 0 6px}
+label:first-child{margin-top:0}
+input,select{width:100%;border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:12px;padding:13px 12px;font-size:20px;outline:none}
+input:focus,select:focus,button:focus-visible{border-color:var(--accent);outline:2px solid var(--accent)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.result{margin-top:14px;border-radius:16px;padding:14px;background:var(--res);border:1px solid var(--line)}
+.big{font-size:32px;font-weight:800;line-height:1.1;margin:2px 0 6px}
+.small,.hint{color:var(--muted);font-size:13px}
+.hint{margin-top:8px;line-height:1.4}
+.m{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--hair)}
+.m:last-child{border:0}
+.m span:first-child{color:var(--muted)}
+.m strong{text-align:right}
+.st{display:inline-block;margin-top:10px;padding:7px 10px;border-radius:999px;font-weight:800;font-size:13px}
+.good{background:rgba(67,209,122,.14);color:var(--good)}
+.warn{background:rgba(255,204,102,.14);color:var(--warn)}
+.bad{background:rgba(255,107,107,.14);color:var(--bad)}
+.btn{border:0;border-radius:12px;background:var(--accent);color:var(--onacc);font:inherit;font-weight:800;padding:12px 14px;font-size:15px}
+.btn.sec{background:var(--sec);color:var(--text)}
+.btn.full{width:100%;margin-top:14px}
+.row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.row:first-of-type{margin-top:0}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pt{background:var(--chip);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:9px 12px;font:inherit;font-weight:700}
+.rec{background:var(--rec);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.rh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.rt{font-size:17px;font-weight:800}
+.dd{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:14px;margin-top:8px}
+.dd span{color:var(--muted)}
+.del{background:var(--delbg);color:var(--delc);border:1px solid var(--delb);border-radius:10px;padding:8px 10px;font:inherit;font-weight:700}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--sec);border:1px solid var(--line);padding:12px 16px;border-radius:12px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+footer{color:var(--muted);text-align:center;font-size:12px;margin-top:16px}
+@media(max-width:520px){.g2.stack{grid-template-columns:1fr}.big{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Расход воздуха</h1>
+<div class="sub">Полевой калькулятор для вентиляции. Работает офлайн.</div>
+
+<div class="tabs">
+  <button class="tab" data-tab="flow">Расход</button>
+  <button class="tab" data-tab="duct">Воздуховод</button>
+  <button class="tab" data-tab="log">Журнал</button>
+</div>
+
+<section id="tab-flow" class="card">
+  <label for="fv">Измеренный расход</label>
+  <div class="g2">
+    <input id="fv" inputmode="decimal" placeholder="Например 20,26">
+    <select id="fu">
+      <option value="CMM">CMM (м³/мин)</option>
+      <option value="л/с">л/с</option>
+      <option value="CFM">CFM</option>
+      <option value="м³/с">м³/с</option>
+      <option value="м³/ч">м³/ч</option>
+    </select>
+  </div>
+  <div class="result">
+    <div class="small">Расход</div>
+    <div class="big" id="fres">0 м³/ч</div>
+    <div class="small" id="feq"></div>
+  </div>
+</section>
+
+<section id="tab-duct" class="card hidden">
+  <label for="shape">Тип воздуховода</label>
+  <select id="shape"><option value="rect">Прямоугольный</option><option value="round">Круглый</option></select>
+
+  <div id="rectF" class="g2 stack" style="margin-top:12px">
+    <div><label for="width">Ширина, мм</label><input id="width" inputmode="decimal" placeholder="250"></div>
+    <div><label for="height">Высота, мм</label><input id="height" inputmode="decimal" placeholder="350"></div>
+  </div>
+  <div id="roundF" class="hidden" style="margin-top:12px">
+    <label for="diameter">Диаметр, мм</label><input id="diameter" inputmode="decimal" placeholder="100">
+  </div>
+
+  <label for="k">Живое сечение, k (воздуховод = 1; решётка, например 0,7)</label>
+  <input id="k" inputmode="decimal" placeholder="1">
+
+  <label for="src">Что измеряете</label>
+  <select id="src"><option value="v">Скорость, м/с</option><option value="pa">Динамическое давление, Па (трубка Пито)</option></select>
+  <div id="tp" class="g2 hidden">
+    <div><label for="t">Температура, °C</label><input id="t" inputmode="decimal" placeholder="20"></div>
+    <div><label for="p">Давление, кПа</label><input id="p" inputmode="decimal" placeholder="101,3"></div>
+  </div>
+
+  <label for="pt" id="ptl">Скорость в точке, м/с</label>
+  <div class="row"><input id="pt" inputmode="decimal" placeholder="Например 3,72"><button class="btn" id="add">Добавить</button></div>
+  <div class="acts">
+    <button class="btn sec" id="undo">Убрать последнюю</button>
+    <button class="btn sec" id="clr">Очистить</button>
+  </div>
+  <div id="pts" class="pts"></div>
+  <div class="hint">Для точного замера берите несколько точек по сечению. Нажмите на точку, чтобы удалить её. Одна точка тоже работает.</div>
+
+  <div class="result">
+    <div class="small">Расход</div>
+    <div class="big" id="dflow">0 м³/ч</div>
+    <div class="small" id="deq"></div>
+    <div id="dres" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<section id="common" class="card">
+  <label for="project">Проектный расход, м³/ч</label>
+  <input id="project" inputmode="decimal" placeholder="Например 1216">
+  <div id="cmp" class="result hidden"></div>
+
+  <label for="room">Помещение / точка замера</label>
+  <input id="room" placeholder="Например: Кабинет 204, П1">
+  <label for="dir">Направление</label>
+  <select id="dir"><option value="П">Приток</option><option value="В">Вытяжка</option><option value="">Не указано</option></select>
+  <label for="vol">Объём помещения, м³ (для кратности)</label>
+  <input id="vol" inputmode="decimal" placeholder="Необязательно">
+  <div id="ach" class="hint"></div>
+  <label for="note">Примечание</label>
+  <input id="note" placeholder="Необязательно">
+  <button class="btn full" id="save">Сохранить замер</button>
+</section>
+
+<section id="tab-log" class="card hidden">
+  <div class="m"><span>Сохранено замеров</span><strong id="cnt">0</strong></div>
+  <label for="tol">Допуск по расходу, ±%</label>
+  <input id="tol" inputmode="decimal" placeholder="10">
+  <label for="theme">Тема</label>
+  <select id="theme"><option value="dark">Тёмная</option><option value="light">Светлая</option><option value="hc">Контрастная (чёрный и жёлтый)</option></select>
+  <div id="inst" class="acts hidden"><button class="btn" id="instbtn">Установить как приложение</button></div>
+  <div id="pwah" class="hint hidden"></div>
+  <div class="acts">
+    <button class="btn sec" id="csv">Экспорт CSV</button>
+    <button class="btn sec" id="jsonx">Копия JSON</button>
+    <button class="btn sec" id="jsoni">Импорт JSON</button>
+    <button class="btn sec" id="wipe">Удалить всё</button>
+  </div>
+  <input type="file" id="file" accept=".json,application/json" class="hidden">
+  <div id="bal"></div>
+  <div id="hist"></div>
+  <div class="hint">Замеры хранятся в браузере этого устройства. Делайте копию JSON: очистка данных браузера удалит журнал.</div>
+</section>
+
+<footer>Все расчёты выполняются локально на устройстве.</footer>
+</div>
+<div id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const num=v=>{const x=parseFloat(String(v).trim().replace(",","."));return Number.isFinite(x)?x:0};
+const fmt=(n,d=1)=>n.toLocaleString("ru-RU",{maximumFractionDigits:d});
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const m=(a,b)=>`<div class="m"><span>${a}</span><strong>${b}</strong></div>`;
+const U={"CMM":60,"л/с":3.6,"CFM":1.69901,"м³/с":3600,"м³/ч":1};
+const KEY="airflow_v2",OLD="airflow_measurements_v1";
+const PERSIST=["fu","width","height","diameter","k","t","p"];
+let S={v:2,records:[],ui:{tab:"flow",shape:"rect",src:"v",tol:10,pts:[],f:{},theme:matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}};
+
+function load(){
+  try{
+    const j=JSON.parse(localStorage.getItem(KEY));
+    if(j&&j.v===2){const ui=S.ui;Object.assign(S,j);S.ui=Object.assign(ui,j.ui)}
+    else{const o=JSON.parse(localStorage.getItem(OLD)||"[]");if(Array.isArray(o))S.records=o}
+  }catch(e){}
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));return true}
+  catch(e){toast("Не удалось записать в память браузера. Сделайте копию JSON.");return false}
+}
+let tt;
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),2400)}
+
+/* ---------- расчёты ---------- */
+const dens=()=>(num($("p").value)||101.325)*1000/(287.05*((num($("t").value)||20)+273.15));
+const toV=x=>S.ui.src==="pa"?Math.sqrt(2*Math.max(x,0)/dens()):x;
+function duct(){
+  const s=S.ui.shape,w=num($("width").value)/1e3,h=num($("height").value)/1e3,d=num($("diameter").value)/1e3;
+  const area=s==="rect"?w*h:Math.PI*d*d/4,k=num($("k").value)||1;
+  const vs=S.ui.pts.map(toV),n=vs.length,avg=n?vs.reduce((a,b)=>a+b,0)/n:0;
+  const sd=n>1?Math.sqrt(vs.reduce((a,b)=>a+(b-avg)**2,0)/(n-1)):0;
+  return{area,k,n,avg,min:n?Math.min(...vs):0,max:n?Math.max(...vs):0,cv:avg?sd/avg*100:0,flow:avg*area*k*3600};
+}
+const eq=q=>`${fmt(q/3.6,2)} л/с · ${fmt(q/1.69901,1)} CFM`;
+
+function cmp(q){
+  const p=num($("project").value),b=$("cmp");
+  if(p<=0||q<=0){b.classList.add("hidden");return}
+  b.classList.remove("hidden");
+  const d=(q-p)/p*100,a=Math.abs(d),tol=S.ui.tol||10,n=(p/q-1)*100;
+  let c="good",t="НОРМА";
+  if(a>tol){c=a>2*tol?"bad":"warn";t=d<0?"НЕДОБОР":"ИЗБЫТОК"}
+  b.innerHTML=m("Факт",fmt(q,1)+" м³/ч")+m("Проект",fmt(p,1)+" м³/ч")
+    +m("Отклонение",(d>=0?"+":"")+fmt(d,2)+" %")
+    +m("Обороты вентилятора (Q ∝ n)",(n>=0?"+":"")+fmt(n,1)+" %")
+    +`<span class="st ${c}">${t}</span>`;
+}
+
+const ach=q=>{const v=num($("vol").value);$("ach").textContent=v>0&&q>0?`Кратность воздухообмена: ${fmt(q/v,2)} 1/ч (объём ${fmt(v,0)} м³)`:""};
+function update(){
+  const t=S.ui.tab;
+  if(t==="flow"){
+    const q=num($("fv").value)*U[$("fu").value];
+    $("fres").textContent=fmt(q,1)+" м³/ч";$("feq").textContent=q>0?eq(q):"";
+    cmp(q);ach(q);
+  }else if(t==="duct"){
+    const r=duct(),pa=S.ui.src==="pa";
+    $("pts").innerHTML=S.ui.pts.map((x,i)=>`<button class="pt" data-i="${i}">${fmt(x,2)} ✕</button>`).join("");
+    $("dflow").textContent=fmt(r.flow,1)+" м³/ч";$("deq").textContent=r.flow>0?eq(r.flow):"";
+    $("dres").innerHTML=m("Площадь",fmt(r.area,5)+" м²")+m("Точек",r.n)+m("Средняя скорость",fmt(r.avg,2)+" м/с")
+      +(r.n>1?m("Мин – макс",fmt(r.min,2)+" – "+fmt(r.max,2)+" м/с")+m("Разброс (CV)",fmt(r.cv,1)+" %"):"")
+      +(pa?m("Плотность воздуха",fmt(dens(),3)+" кг/м³"):"")
+      +(r.cv>15?`<div class="hint" style="color:var(--warn)">Большой разброс по точкам: профиль потока неравномерный или точек мало.</div>`:"");
+    cmp(r.flow);ach(r.flow);
+  }else renderLog();
+}
+
+/* ---------- интерфейс ---------- */
+function showTab(t){
+  S.ui.tab=t;
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+  ["flow","duct","log"].forEach(x=>$("tab-"+x).classList.toggle("hidden",x!==t));
+  $("common").classList.toggle("hidden",t==="log");
+  update();save();
+}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+function applyShape(){const r=S.ui.shape==="round";$("rectF").classList.toggle("hidden",r);$("roundF").classList.toggle("hidden",!r)}
+function applySrc(){const pa=S.ui.src==="pa";$("tp").classList.toggle("hidden",!pa);$("ptl").textContent=pa?"Динамическое давление в точке, Па":"Скорость в точке, м/с"}
+$("shape").onchange=e=>{S.ui.shape=e.target.value;applyShape();save();update()};
+$("src").onchange=e=>{
+  if(S.ui.pts.length){S.ui.pts=[];toast("Точки очищены: изменились единицы")}
+  S.ui.src=e.target.value;applySrc();save();update();
+};
+let autoVol=false;
+$("vol").addEventListener("input",()=>{autoVol=false});
+$("room").addEventListener("input",()=>{
+  if($("vol").value&&!autoVol)return;
+  const k=$("room").value.trim().toLowerCase(),f=k&&S.records.find(r=>r.vol&&r.room.trim().toLowerCase()===k);
+  $("vol").value=f?f.vol:"";autoVol=!!f;update();
+});
+$("tol").oninput=e=>{S.ui.tol=num(e.target.value)||10;save();update()};
+
+["input","change"].forEach(ev=>document.addEventListener(ev,e=>{
+  const id=e.target.id;
+  if(PERSIST.includes(id)){S.ui.f[id]=e.target.value;save()}
+  update();
+}));
+
+function addPt(){const v=num($("pt").value);if(v<=0)return;S.ui.pts.push(v);$("pt").value="";save();update();$("pt").focus()}
+$("add").onclick=addPt;
+$("pt").onkeydown=e=>{if(e.key==="Enter")addPt()};
+$("undo").onclick=()=>{S.ui.pts.pop();save();update()};
+$("clr").onclick=()=>{S.ui.pts=[];save();update()};
+$("pts").onclick=e=>{const b=e.target.closest(".pt");if(b){S.ui.pts.splice(+b.dataset.i,1);save();update()}};
+
+/* ---------- сохранение замера ---------- */
+$("save").onclick=()=>{
+  const room=$("room").value.trim();
+  if(!room){toast("Введите помещение или точку замера");$("room").focus();return}
+  let r;
+  if(S.ui.tab==="flow"){
+    const v=num($("fv").value);
+    if(v<=0){toast("Введите расход");return}
+    r={mode:"Расход",inp:v+" "+$("fu").value,flow:v*U[$("fu").value]};
+  }else{
+    const d=duct();
+    if(d.area<=0||!d.n){toast("Введите размеры и добавьте хотя бы одну точку");return}
+    r={mode:"Воздуховод",shape:S.ui.shape,W:num($("width").value),H:num($("height").value),D:num($("diameter").value),
+       k:d.k,src:S.ui.src,pts:[...S.ui.pts],area:d.area,velocity:d.avg,cv:d.cv,flow:d.flow};
+    if(S.ui.src==="pa")r.rho=dens();
+  }
+  Object.assign(r,{id:Date.now(),date:new Date().toLocaleString("ru-RU"),room,dir:$("dir").value,note:$("note").value.trim(),project:num($("project").value),vol:num($("vol").value)||0});
+  S.records.unshift(r);
+  if(save()){
+    toast("Замер сохранён");$("note").value="";
+    if(S.ui.tab==="duct"){S.ui.pts=[];save();update()}
+  }else S.records.shift();
+};
+
+/* ---------- журнал ---------- */
+const sec=r=>{
+  const s=r.shape,W=r.W??r.width,H=r.H??r.height,D=r.D??r.diameter;
+  return s==="rect"&&W&&H?`${fmt(W,0)}×${fmt(H,0)} мм`:s==="round"&&D?`Ø${fmt(D,0)} мм`:"";
+};
+function renderLog(){
+  const R=S.records;$("cnt").textContent=R.length;$("tol").value=S.ui.tol;
+  const B={};
+  R.forEach(r=>{if(!r.dir)return;const k=r.room.trim().toLowerCase(),b=B[k]||(B[k]={n:r.room,"П":0,"В":0});b[r.dir]+=r.flow;if(r.vol)b.vol=r.vol});
+  const keys=Object.keys(B);
+  $("bal").innerHTML=keys.length?`<div class="result"><div class="small">Баланс по помещениям</div>`+keys.map(k=>{
+    const b=B[k],d=b["П"]-b["В"],mx=Math.max(b["П"],b["В"]);
+    return m(esc(b.n),`П ${fmt(b["П"],0)} · В ${fmt(b["В"],0)} · Δ ${d>=0?"+":""}${fmt(d,0)} (${fmt(mx?Math.abs(d)/mx*100:0,1)} %)`)+(b.vol?m("Кратность, 1/ч",`П ${fmt(b["П"]/b.vol,2)} · В ${fmt(b["В"]/b.vol,2)}`):"");
+  }).join("")+`<div class="hint">Суммы по сохранённым замерам, м³/ч. Δ = приток − вытяжка.</div></div>`:"";
+  $("hist").innerHTML=R.length?R.map(r=>{
+    const dev=r.project?(r.flow-r.project)/r.project*100:null,s=sec(r);
+    return `<div class="rec"><div class="rh"><div>
+      <div class="rt">${esc(r.room)}${r.dir?" · "+(r.dir==="П"?"приток":"вытяжка"):""}</div>
+      <div class="small">${esc(r.date)} · ${esc(r.mode)}</div></div>
+      <button class="del" data-id="${r.id}">Удалить</button></div>
+      <div class="dd">
+        <div><span>Факт:</span> <strong>${fmt(r.flow,1)} м³/ч</strong></div>
+        ${r.project?`<div><span>Проект:</span> <strong>${fmt(r.project,1)} м³/ч</strong></div><div><span>Отклонение:</span> <strong>${dev>=0?"+":""}${fmt(dev,2)} %</strong></div>`:""}
+        ${r.inp?`<div><span>Ввод:</span> ${esc(r.inp)}</div>`:""}
+        ${s?`<div><span>Сечение:</span> ${s}${r.k&&r.k!==1?`, k=${fmt(r.k,2)}`:""}</div>`:""}
+        ${r.velocity?`<div><span>Скорость:</span> ${fmt(r.velocity,2)} м/с</div>`:""}
+        ${r.vol?`<div><span>Кратность:</span> ${fmt(r.flow/r.vol,2)} 1/ч (V=${fmt(r.vol,0)} м³)</div>`:""}
+        ${r.pts?`<div><span>Точек:</span> ${r.pts.length}${r.cv?`, CV ${fmt(r.cv,1)} %`:""}</div>`:""}
+      </div>
+      ${r.note?`<div class="hint">Примечание: ${esc(r.note)}</div>`:""}</div>`;
+  }).join(""):`<div class="hint">Замеров пока нет. Сохраните первый на вкладке «Расход» или «Воздуховод».</div>`;
+}
+$("hist").onclick=e=>{
+  const b=e.target.closest(".del");if(!b)return;
+  if(!confirm("Удалить этот замер?"))return;
+  S.records=S.records.filter(r=>String(r.id)!==b.dataset.id);save();renderLog();
+};
+$("wipe").onclick=()=>{
+  if(!S.records.length)return;
+  if(confirm("Удалить все сохранённые замеры? Сначала сделайте копию JSON.")){S.records=[];save();renderLog()}
+};
+
+/* ---------- экспорт / импорт ---------- */
+async function out(name,text,type){
+  const blob=new Blob([text],{type}),f=new File([blob],name,{type});
+  if(matchMedia("(pointer:coarse)").matches&&navigator.canShare&&navigator.canShare({files:[f]})){
+    try{await navigator.share({files:[f]});return}catch(e){if(e.name==="AbortError")return}
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+const day=()=>new Date().toISOString().slice(0,10);
+$("csv").onclick=()=>{
+  if(!S.records.length){toast("Нет сохранённых замеров");return}
+  const q=v=>{let s=String(v??"");if(/^[=+\-@\t\r]/.test(s))s="'"+s;return `"${s.replace(/"/g,'""')}"`};
+  const n=(v,d)=>v==null||v===""||isNaN(v)?"":Number(v).toFixed(d).replace(".",",");
+  const head=["Дата","Помещение","Направление","Режим","Ввод","Сечение","k","Точки","Средняя скорость, м/с","CV, %","Проект, м3/ч","Факт, м3/ч","Отклонение, %","Объём, м3","Кратность, 1/ч","Примечание"];
+  const rows=S.records.map(r=>[
+    r.date,r.room,r.dir==="П"?"приток":r.dir==="В"?"вытяжка":"",r.mode,r.inp||"",sec(r),
+    r.k&&r.k!==1?n(r.k,2):"",(r.pts||r.samples||[]).map(x=>String(x).replace(".",",")).join(" "),
+    n(r.velocity,2),n(r.cv,1),r.project?n(r.project,1):"",n(r.flow,1),
+    r.project?n((r.flow-r.project)/r.project*100,2):"",r.vol?n(r.vol,1):"",r.vol?n(r.flow/r.vol,2):"",r.note||""
+  ].map(q).join(";"));
+  out(`airflow_${day()}.csv`,"\ufeff"+[head.map(q).join(";"),...rows].join("\r\n"),"text/csv;charset=utf-8");
+};
+$("jsonx").onclick=()=>{
+  if(!S.records.length){toast("Нет сохранённых замеров");return}
+  out(`airflow_backup_${day()}.json`,JSON.stringify({v:2,records:S.records},null,1),"application/json");
+};
+$("jsoni").onclick=()=>$("file").click();
+$("file").onchange=async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{
+    const j=JSON.parse(await f.text());
+    if(!j||!Array.isArray(j.records))throw 0;
+    const ids=new Set(S.records.map(r=>r.id));
+    const add=j.records.filter(r=>r&&typeof r.room==="string"&&Number.isFinite(r.flow)&&!ids.has(r.id));
+    S.records=S.records.concat(add).sort((a,b)=>(b.id||0)-(a.id||0));
+    save();renderLog();toast(`Импортировано замеров: ${add.length}`);
+  }catch(err){toast("Не удалось прочитать файл. Нужна копия JSON из этого калькулятора.")}
+};
+
+/* ---------- тема и установка ---------- */
+const TH={dark:"#111827",light:"#eef2f8",hc:"#000000"};
+function applyTheme(){document.documentElement.dataset.theme=S.ui.theme;document.querySelector("meta[name=theme-color]").content=TH[S.ui.theme]||TH.dark}
+$("theme").onchange=e=>{S.ui.theme=e.target.value;applyTheme();save()};
+let dip;
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e;$("inst").classList.remove("hidden")});
+addEventListener("appinstalled",()=>$("inst").classList.add("hidden"));
+$("instbtn").onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$("inst").classList.add("hidden")};
+(()=>{
+  const web=/^https?:$/.test(location.protocol),std=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  if(web&&"serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+  const h=$("pwah");let t="";
+  if(!web)t="Установка как приложение работает только при открытии по HTTPS-адресу (например, GitHub Pages). Из файла на устройстве калькулятор остаётся обычной страницей.";
+  else if(!std&&/iphone|ipad|ipod/i.test(navigator.userAgent))t="Установка на iPhone и iPad: «Поделиться» → «На экран “Домой”».";
+  if(t){h.textContent=t;h.classList.remove("hidden")}
+})();
+
+/* ---------- старт ---------- */
+load();
+PERSIST.forEach(id=>{if(S.ui.f[id]!=null)$(id).value=S.ui.f[id]});
+$("shape").value=S.ui.shape;$("src").value=S.ui.src;$("tol").value=S.ui.tol;
+applyTheme();$("theme").value=S.ui.theme;
+applyShape();applySrc();showTab(S.ui.tab);
+</script>
+</body>
+</html>
